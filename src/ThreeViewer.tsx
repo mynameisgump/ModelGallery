@@ -1,7 +1,7 @@
-import { OrbitControls, Gltf, Environment, Bounds, useBounds, useGLTF, meshBounds, useHelper, Bvh, CameraControls} from "@react-three/drei"
+import { Environment, useGLTF, CameraControls} from "@react-three/drei"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { BoxHelper, Group, Object3D, Vector3, BoxGeometry, MeshBasicMaterial } from "three"
+import { useEffect, useRef, useState } from "react"
+import { Group, Object3D, Sphere, Vector3 } from "three"
 
 import { Box3 } from "three"
 type GlbModelProps = {
@@ -16,31 +16,28 @@ const GlbModel = ({name}: GlbModelProps) => {
         setPrevName(name);
         setMeshVisible(false);
     }
-
-    // const boundsApi = useBounds();
-    const gltf = useGLTF(name);
-    
+    const gltf = useGLTF(name);    
     gltf.scene.updateMatrixWorld(true);
     const box = new Box3().setFromObject(gltf.scene);
+    const bsphere = new Sphere();
+    box.getBoundingSphere(bsphere);
     const groupRef = useRef<Group>(new Group());
     const meshRef = useRef<Object3D>(new Object3D());
 
     const currentScale = new Vector3(0,0,0);
-    const [introAnimation, setIntroAnimation] = useState<boolean>(true);
+    const introAnimation = true;
 
 
     useEffect(() => {
         if (camControlsRef.current) {
-            camControlsRef.current.fitToBox(box, false);
+            camControlsRef.current.fitToSphere(bsphere, false);
         }
-    }, [box]);
+    }, [box, bsphere]);
 
     useFrame(() => {
         if (introAnimation) {
-            console.log("Why")
             groupRef.current.scale.copy(currentScale);
-            currentScale.lerp(new Vector3(1,1,1), 0.1);
-            
+            currentScale.lerp(new Vector3(1,1,1), 0.1);            
         }
         setMeshVisible(true);
     });
