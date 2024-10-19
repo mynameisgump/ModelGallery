@@ -9,6 +9,7 @@ type GlbModelProps = {
 }
 
 const GlbModel = ({name}: GlbModelProps) => {
+    const camControlsRef = useRef<CameraControls>(null);
     const [meshVisible, setMeshVisible] = useState<boolean>(false);
     const [prevName, setPrevName] = useState(name);
     if (prevName !== name) {
@@ -16,7 +17,7 @@ const GlbModel = ({name}: GlbModelProps) => {
         setMeshVisible(false);
     }
 
-    const boundsApi = useBounds();
+    // const boundsApi = useBounds();
     const gltf = useGLTF(name);
     
     gltf.scene.updateMatrixWorld(true);
@@ -25,21 +26,20 @@ const GlbModel = ({name}: GlbModelProps) => {
     const meshRef = useRef<Object3D>(new Object3D());
 
     const currentScale = new Vector3(0,0,0);
-    const [introAnimation, setIntroAnimation] = useState<boolean>(false);
+    const [introAnimation, setIntroAnimation] = useState<boolean>(true);
 
 
     useEffect(() => {
-        console.log("Refresh")
-        boundsApi.refresh(box).fit().clip();
-
-    }, [box, boundsApi, gltf.scene, name]);
+        if (camControlsRef.current) {
+            camControlsRef.current.fitToBox(box, false);
+        }
+    }, [box]);
 
     useFrame(() => {
-
         if (introAnimation) {
             console.log("Why")
             groupRef.current.scale.copy(currentScale);
-            currentScale.lerp(new Vector3(1,1,1), 1);
+            currentScale.lerp(new Vector3(1,1,1), 0.1);
             
         }
         setMeshVisible(true);
@@ -48,6 +48,7 @@ const GlbModel = ({name}: GlbModelProps) => {
     return (
         <group visible={meshVisible} ref={groupRef}>
             <primitive onPointerEnter={()=>{console.log("Testing")}} ref={meshRef} object={gltf.scene}></primitive>
+            <CameraControls ref={camControlsRef} makeDefault/>
         </group>
     );
 }
@@ -66,18 +67,18 @@ const GalleryController = () => {
     };
     
     return (
-        <Bounds maxDuration={0}>
+        // <Bounds maxDuration={0}>
             <group onPointerDown={(e)=>{e.stopPropagation(); cycleSelectedModel();}}>
                 <GlbModel name={selectedModel}></GlbModel> 
             </group>
-        </Bounds>
+        // </Bounds>
     )
 }
 
 const ThreeViewer = () => {
     return (
         <Canvas>
-            <OrbitControls></OrbitControls>
+            {/* <OrbitControls></OrbitControls> */}
             {/* <CameraControls makeDefault></CameraControls> */}
             <ambientLight  />
             <Environment preset="sunset" />
