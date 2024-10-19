@@ -2,6 +2,7 @@ import { Environment, useGLTF, CameraControls} from "@react-three/drei"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { useEffect, useRef, useState } from "react"
 import { Group, Object3D, Sphere, Vector3 } from "three"
+import { useMemo } from "react"
 
 import { Box3 } from "three"
 type GlbModelProps = {
@@ -10,16 +11,16 @@ type GlbModelProps = {
 
 const GlbModel = ({name}: GlbModelProps) => {
     const camControlsRef = useRef<CameraControls>(null);
-    const [meshVisible, setMeshVisible] = useState<boolean>(false);
+    // const [meshVisible, setMeshVisible] = useState<boolean>(false);
     const [prevName, setPrevName] = useState(name);
     if (prevName !== name) {
         setPrevName(name);
-        setMeshVisible(false);
+        // setMeshVisible(false);
     }
     const gltf = useGLTF(name);    
     gltf.scene.updateMatrixWorld(true);
     const box = new Box3().setFromObject(gltf.scene);
-    const bsphere = new Sphere();
+    const bsphere = useMemo(() => {return new Sphere()},[]);
     box.getBoundingSphere(bsphere);
     const groupRef = useRef<Group>(new Group());
     const meshRef = useRef<Object3D>(new Object3D());
@@ -35,15 +36,15 @@ const GlbModel = ({name}: GlbModelProps) => {
     }, [box, bsphere]);
 
     useFrame(() => {
-        if (introAnimation) {
-            groupRef.current.scale.copy(currentScale);
-            currentScale.lerp(new Vector3(1,1,1), 0.1);            
-        }
-        setMeshVisible(true);
+        // if (introAnimation) {
+        //     groupRef.current.scale.copy(currentScale);
+        //     currentScale.lerp(new Vector3(1,1,1), 0.1);            
+        // }
+        // setMeshVisible(true);
     });
 
     return (
-        <group visible={meshVisible} ref={groupRef}>
+        <group ref={groupRef}>
             <primitive onPointerEnter={()=>{console.log("Testing")}} ref={meshRef} object={gltf.scene}></primitive>
             <CameraControls ref={camControlsRef} makeDefault/>
         </group>
@@ -51,7 +52,7 @@ const GlbModel = ({name}: GlbModelProps) => {
 }
 
 const GalleryController = () => {
-    const [selectedModel, setSelectedModel] = useState<string>("MansonFish.glb");
+    const [selectedModel, setSelectedModel] = useState<string>("Gump.glb");
 
     
     const cycleSelectedModel = () => {
