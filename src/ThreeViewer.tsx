@@ -90,7 +90,7 @@ const GalleryController = () => {
     const cycleSelectedModel = () => {
         console.log("Cycling model");
         if (selectedModel === "Gump.glb") {
-            setSelectedModel("egg.glb")
+            setSelectedModel("MansonFish.glb")
         } else {
             setSelectedModel("Gump.glb")
         }
