@@ -1,40 +1,55 @@
-import { Box, OrbitControls, Torus, Gltf, Environment } from "@react-three/drei"
-import { Canvas } from "@react-three/fiber"
-import { useState } from "react"
+import { OrbitControls, Gltf, Environment, Bounds, useBounds, useGLTF} from "@react-three/drei"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { useEffect, useRef, useState } from "react"
+import { Group, Object3D, Vector3 } from "three"
+import { Box3 } from "three"
 
 type GlbModelProps = {
     name: string
 }
 
-const GlbModel = ({name}: GlbModelProps) => {
 
-    if (name === "Box") {
-        return (
-            <Gltf src="Gump.glb"></Gltf>
-        )
-    }
-    if (name === "Torus") {
-        return (
-            <Torus></Torus>
-        )
-    }
+const GlbModel = ({name}: GlbModelProps) => {
+    const boundsApi = useBounds();    
+    const gltf = useGLTF(name);
+    const box = new Box3().setFromObject(gltf.scene);
+    const groupRef = useRef<Group>(new Group());
+    const currentScale = new Vector3(0,0,0);
+
+    boundsApi.refresh(box).fit().clip();
+
+    
+    useFrame(() => {
+        groupRef.current.scale.copy(currentScale);
+        currentScale.lerp(new Vector3(1,1,1), 0.1);
+        // console.log(currentScale);
+    });
+
+    return (
+        <group ref={groupRef}  >
+            <primitive object={gltf.scene}></primitive>
+            {/* <Gltf src={name} scale={currentScale}></Gltf> */}
+        </group>
+    );
 }
 
 const GalleryController = () => {
-    const [selectedModel, setSelectedModel] = useState<string>("Box");
+    const [selectedModel, setSelectedModel] = useState<string>("Gump.glb");
 
     const cycleSelectedModel = () => {
-        if (selectedModel === "Box") {
-            setSelectedModel("Torus")
+        if (selectedModel === "Gump.glb") {
+            setSelectedModel("MansonFish.glb")
         } else {
-            setSelectedModel("Box")
+            setSelectedModel("Gump.glb")
         }
     }
-
+    
     return (
-        <group onClick={cycleSelectedModel}>
-            <GlbModel name={selectedModel}></GlbModel> 
-        </group>
+        <Bounds maxDuration={0}>
+            <group onClick={cycleSelectedModel}>
+                <GlbModel name={selectedModel}></GlbModel> 
+            </group>
+        </Bounds>
     )
 }
 
