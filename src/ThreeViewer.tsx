@@ -1,4 +1,4 @@
-import { Box, OrbitControls, Torus } from "@react-three/drei"
+import { Box, OrbitControls, Torus, Gltf, Environment } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { useState } from "react"
 
@@ -7,10 +7,10 @@ type GlbModelProps = {
 }
 
 const GlbModel = ({name}: GlbModelProps) => {
-    
+
     if (name === "Box") {
         return (
-            <Box></Box>
+            <Gltf src="Gump.glb"></Gltf>
         )
     }
     if (name === "Torus") {
@@ -42,8 +42,9 @@ const ThreeViewer = () => {
     return (
         <Canvas>
             <OrbitControls></OrbitControls>
-            <ambientLight />
-            <pointLight position={[10, 10, 10]} />
+            <ambientLight  />
+            <Environment preset="sunset" />
+            {/* <pointLight position={[10, 10, 10]} /> */}
             <GalleryController></GalleryController>
         </Canvas>
     )
