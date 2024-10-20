@@ -1,10 +1,11 @@
 import { Environment, useGLTF, CameraControls} from "@react-three/drei"
-import { Canvas, useFrame } from "@react-three/fiber"
+import { Canvas, useFrame, useLoader } from "@react-three/fiber"
 import { useEffect, useRef, useState } from "react"
-import { Group, Object3D, SkinnedMesh, Sphere, Vector3 } from "three"
+import { Group, Mesh, Object3D, SkinnedMesh, Sphere, Vector3 } from "three"
 import { useMemo } from "react"
 import { useHelper } from "@react-three/drei"
 import { BoxHelper } from "three"
+import { STLLoader } from "three/examples/jsm/Addons.js"
 
 import { Box3 } from "three"
 type GlbModelProps = {
@@ -21,22 +22,27 @@ const GlbModel = ({name}: GlbModelProps) => {
         setPrevName(name);
         // setMeshVisible(false);
     }
-    const gltf = useGLTF(name);    
-    const skinnedMeshes: Array<SkinnedMesh> = [];
-    gltf.scene.traverse((child) => {
-        if (child.type === "SkinnedMesh") {
-            skinnedMeshes.push(child as SkinnedMesh);
-        }
-    });
+    const gltf = useLoader(STLLoader, name);
+    // const skinnedMeshes: Array<SkinnedMesh> = [];
+    // gltf.traverse((child) => {
+    //     if (child.type === "SkinnedMesh") {
+    //         skinnedMeshes.push(child as SkinnedMesh);
+    //     }
+    // });
     
     // gltf.scene.updateMatrixWorld(true);
     // gltf.scene.matrixWorldAutoUpdate = true
-    const box = new Box3().setFromObject(gltf.scene);
-    const bsphere = useMemo(() => {return new Sphere()},[]);
-    box.getBoundingSphere(bsphere);
+    gltf.computeBoundingBox();
+    gltf.computeBoundingSphere();
+    // gltf.rotateZ(-Math.PI / 2);
+    const box = gltf.boundingBox as Box3;
+    const bsphere = gltf.boundingSphere as Sphere;
+    console.log(bsphere)
+    // box.getBoundingSphere(bsphere);
+    
+   
     const groupRef = useRef<Group>(new Group());
-    const meshRef = useRef<Object3D>(new Object3D());
-    const box3 = new Box3().setFromObject(gltf.scene);
+    const meshRef = useRef<Mesh>(new Mesh());
     // useHelper(meshRef, BoxHelper, 'cyan');
 
     const currentScale = new Vector3(0.001,0.001,0.001);
@@ -47,52 +53,33 @@ const GlbModel = ({name}: GlbModelProps) => {
         if (camControlsRef.current) {
             camControlsRef.current.fitToSphere(bsphere, false);
         }
-    }, [box, bsphere]);
+    }, [bsphere]);
 
     useFrame(() => {
-        if (skinnedMeshes.length > 0) {
-            skinnedMeshes.forEach((mesh: SkinnedMesh) => {
-                mesh.geometry.computeBoundingBox();
-                mesh.computeBoundingBox();
-                mesh.updateMatrixWorld(true);
-                mesh.matrixWorldAutoUpdate = true;
-                mesh.matrixWorldNeedsUpdate = true;
-                mesh.matrixAutoUpdate = true;
-            })
-        }
         if (introAnimation) {
             groupRef.current.scale.copy(currentScale);
-            groupRef.current.updateMatrixWorld(true);
-            groupRef.current.matrixWorldAutoUpdate = true;
-            groupRef.current.matrixWorldNeedsUpdate = true;
-            groupRef.current.matrixAutoUpdate = true;
-
-            meshRef.current.updateMatrixWorld(true);
-            meshRef.current.matrixWorldAutoUpdate = true;
-            meshRef.current.matrixWorldNeedsUpdate = true;
-            meshRef.current.matrixAutoUpdate = true;
             currentScale.lerp(new Vector3(1,1,1), 0.1);
         }
     });
 
     return (
         <group ref={groupRef}>
-            <primitive onPointerEnter={()=>{console.log("Testing")}} ref={meshRef} object={gltf.scene}></primitive>
+            <mesh rotation={[-Math.PI / 2,0,0]} onPointerEnter={()=>{console.log("Testing")}} ref={meshRef} geometry={gltf}></mesh>
             <CameraControls ref={camControlsRef} makeDefault/>
         </group>
     );
 }
 
 const GalleryController = () => {
-    const [selectedModel, setSelectedModel] = useState<string>("MansonFish.glb");
+    const [selectedModel, setSelectedModel] = useState<string>("2022.stl");
 
     
     const cycleSelectedModel = () => {
         console.log("Cycling model");
-        if (selectedModel === "Gump.glb") {
-            setSelectedModel("MansonFish.glb")
+        if (selectedModel === "2022.stl") {
+            setSelectedModel("2023.stl")
         } else {
-            setSelectedModel("Gump.glb")
+            setSelectedModel("2022.stl")
         }
     };
     
